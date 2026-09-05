@@ -1,6 +1,6 @@
 {
-  "name": "लेन-देन",
-  "short_name": "लेन-देन",
+    "name": "Hisab Grand",
+  "short_name": "Hisab Grand",
   "description": "किससे कितना लेना-देना है, उसका हिसाब",
   "start_url": "./index.html",
   "scope": "./",
