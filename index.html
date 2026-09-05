@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>लेन-देन</title>
+<title>Hisab Grand</title>
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#7A1E2B">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -155,7 +155,7 @@ label.f span{display:block;font-size:13px;color:var(--ink2);margin-bottom:5px}
 
 <header class="top">
   <button class="iconbtn" id="backBtn" style="display:none">‹</button>
-  <h1 id="ttl">लेन-देन<span class="sub" id="sub">किससे कितना लेना-देना है</span></h1>
+  <h1 id="ttl">Hisab Grand<span class="sub" id="sub">किससे कितना लेना-देना है</span></h1>
 </header>
 
 <main>
@@ -397,7 +397,7 @@ function goHome(){
     :'<div class="empty">आज किसी से बात करनी बाकी नहीं है।</div>';
   document.getElementById('soonList').innerHTML=soon.length?soon.map(h=>dueRow(h,false)).join('')
     :'<div class="empty">अगले हफ्ते कोई तारीख तय नहीं है।</div>';
-  show('home','लेन-देन','किससे कितना लेना-देना है',false);
+  show('home','Hisab Grand','किससे कितना लेना-देना है',false);
 }
 function dueRow(h,isDue){
   const p=P(h.personId),b=hisabSum(h.id).bal,t=today();
@@ -722,7 +722,7 @@ function doPrint(){
   const label=document.getElementById('rWhat').selectedOptions[0].text;
   const pa=document.getElementById('printArea');
   pa.className=cols==='2'?'c2':'';
-  pa.innerHTML=`<h1>लेन-देन का हिसाब</h1>
+  pa.innerHTML=`<h1>Hisab Grand</h1>
     <div class="meta">${esc(label)} · ${hs.length} हिसाब · कुल लेना ${money(tOut)} · कुल देना ${money(tIn)} · ${hDate(today())}</div>
     <div class="plist">${body}</div>`;
   setTimeout(()=>window.print(),80);
@@ -737,7 +737,7 @@ function shareText(){
     return '• '+p.name+(p.ref?' ('+p.ref+')':'')+' — '+(h.title||catName(h.catId))+' — '
       +(b>0?'लेना ':b<0?'देना ':'')+money(Math.abs(b))+(h.dueDate?' — '+hDate(h.dueDate):'');
   });
-  const text='लेन-देन का हिसाब — '+hDate(today())+'\n\n'+lines.join('\n')
+  const text='Hisab Grand — '+hDate(today())+'\n\n'+lines.join('\n')
     +'\n\nकुल लेना '+money(tOut)+' · कुल देना '+money(tIn);
   if(navigator.share)navigator.share({text}).catch(()=>{});
   else{navigator.clipboard.writeText(text);alert('सूची copy हो गई। व्हाट्सएप में paste कर दें।');}

@@ -1,4 +1,4 @@
-const CACHE = 'lenden-v1';
+const CACHE = 'hisabgrand-v2';
 const ASSETS = [
   './',
   './index.html',
