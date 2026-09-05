@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>लेन-देन</title>
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#7A1E2B">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#FAF7F2;
+  --card:#FFFFFF;
+  --ink:#23201D;
+  --ink2:#6B655E;
+  --line:#E4DED4;
+  --bahi:#7A1E2B;
+  --bahi-soft:#F2E4E4;
+  --out:#17604A;
+  --in:#A8452A;
+  --warn:#B9741A;
+}
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;padding:0}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:"Noto Sans Devanagari",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  font-size:16px;line-height:1.5;
+  padding-bottom:calc(64px + env(safe-area-inset-bottom));
+}
+.num{font-variant-numeric:tabular-nums;letter-spacing:-.01em}
+button,input,select,textarea{font-family:inherit;font-size:16px;color:inherit}
+button{cursor:pointer;border:none;background:none}
+a{color:var(--bahi)}
+
+/* ---------- chrome ---------- */
+header.top{
+  position:sticky;top:0;z-index:20;background:var(--bahi);color:#fff;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+  display:flex;align-items:center;gap:10px;min-height:52px;
+}
+header.top h1{margin:0;font-size:17px;font-weight:600;flex:1;line-height:1.25}
+header.top .sub{display:block;font-size:12.5px;font-weight:400;opacity:.8}
+.iconbtn{color:#fff;font-size:20px;padding:6px 8px;border-radius:8px}
+.iconbtn:active{background:rgba(255,255,255,.15)}
+
+nav.tabs{
+  position:fixed;left:0;right:0;bottom:0;z-index:30;background:var(--card);
+  border-top:1px solid var(--line);display:flex;
+  padding-bottom:env(safe-area-inset-bottom);
+}
+nav.tabs button{flex:1;padding:9px 0 8px;font-size:11.5px;color:var(--ink2);display:flex;flex-direction:column;align-items:center;gap:2px}
+nav.tabs button b{font-size:19px;font-weight:400;line-height:1}
+nav.tabs button.on{color:var(--bahi);font-weight:600}
+
+main{padding:14px 14px 24px;max-width:720px;margin:0 auto}
+.view{display:none}
+.view.on{display:block}
+
+/* ---------- bits ---------- */
+h2.sec{font-size:13px;font-weight:600;color:var(--ink2);margin:22px 0 8px}
+h2.sec:first-child{margin-top:4px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.row{display:block;width:100%;text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);background:none}
+.row:last-child{border-bottom:none}
+.row:active{background:#F6F2EB}
+.row .l1{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.row .nm{font-weight:600;font-size:15.5px}
+.row .l2{font-size:13px;color:var(--ink2);margin-top:2px;display:flex;justify-content:space-between;gap:10px}
+.amt{font-weight:600;white-space:nowrap}
+.amt.out{color:var(--out)}
+.amt.in{color:var(--in)}
+.amt.zero{color:var(--ink2)}
+.muted{color:var(--ink2)}
+.empty{padding:22px 16px;text-align:center;color:var(--ink2);font-size:14px;line-height:1.6}
+
+.position{background:var(--card);border:1px solid var(--line);border-radius:12px;display:flex}
+.position div{flex:1;padding:14px}
+.position div+div{border-left:1px solid var(--line)}
+.position .lbl{font-size:12.5px;color:var(--ink2)}
+.position .val{font-size:23px;font-weight:700;margin-top:3px}
+
+.pill{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:20px;background:var(--bahi-soft);color:var(--bahi);font-weight:500}
+.pill.due{background:#FBE9D7;color:var(--warn)}
+.pill.over{background:#F7DED6;color:var(--in)}
+.pill.done{background:#E8EDE9;color:var(--ink2)}
+
+.btn{display:inline-block;padding:11px 16px;border-radius:10px;background:var(--bahi);color:#fff;font-weight:600;font-size:15px;text-align:center}
+.btn.ghost{background:none;color:var(--bahi);border:1px solid var(--bahi)}
+.btn.grey{background:none;color:var(--ink2);border:1px solid var(--line)}
+.btn.wide{display:block;width:100%}
+.btn:active{opacity:.85}
+.btnrow{display:flex;gap:8px;margin-top:12px}
+.btnrow .btn{flex:1}
+
+.fab{position:fixed;right:16px;bottom:calc(76px + env(safe-area-inset-bottom));z-index:25;
+  width:54px;height:54px;border-radius:50%;background:var(--bahi);color:#fff;font-size:28px;
+  box-shadow:0 3px 12px rgba(122,30,43,.35);display:flex;align-items:center;justify-content:center}
+
+input[type=text],input[type=number],input[type=date],input[type=tel],select,textarea{
+  width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;background:var(--card);
+}
+textarea{min-height:78px;resize:vertical}
+label.f{display:block;margin-bottom:12px}
+label.f span{display:block;font-size:13px;color:var(--ink2);margin-bottom:5px}
+.two{display:flex;gap:10px}
+.two>*{flex:1}
+
+/* ---------- sheet / dialog ---------- */
+.scrim{position:fixed;inset:0;background:rgba(35,32,29,.45);z-index:40;display:none}
+.scrim.on{display:block}
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:41;background:var(--paper);
+  border-radius:16px 16px 0 0;max-height:92vh;overflow:auto;display:none;
+  padding:16px 16px calc(20px + env(safe-area-inset-bottom));}
+.sheet.on{display:block}
+.sheet h3{margin:2px 0 14px;font-size:17px}
+.sheet .grab{width:38px;height:4px;border-radius:2px;background:var(--line);margin:0 auto 12px}
+
+.search{width:100%;padding:10px 12px;border:1px solid var(--line);border-radius:9px;margin-bottom:12px}
+
+.entry{padding:11px 14px;border-bottom:1px solid var(--line)}
+.entry:last-child{border-bottom:none}
+.entry .top{display:flex;justify-content:space-between;gap:10px;align-items:baseline}
+.entry .dt{font-size:12.5px;color:var(--ink2)}
+.entry .nt{font-size:13.5px;color:var(--ink2);margin-top:3px;white-space:pre-wrap}
+.del{font-size:12.5px;color:var(--in);padding:4px 0}
+
+.stat{display:flex;justify-content:space-between;padding:10px 14px;border-bottom:1px solid var(--line);font-size:14px}
+.stat:last-child{border-bottom:none}
+.stat b{font-weight:600}
+
+.warnbox{background:#FDF3E6;border:1px solid #EBD8BC;border-radius:10px;padding:12px 14px;font-size:13.5px;line-height:1.6;color:#6E4B14}
+
+/* ---------- print ---------- */
+#printArea{display:none}
+@media print{
+  body{background:#fff;padding:0}
+  header.top,nav.tabs,main,.fab,.scrim,.sheet{display:none !important}
+  #printArea{display:block;padding:0;font-size:11pt;color:#000}
+  #printArea.c2 .plist{column-count:2;column-gap:22px}
+  #printArea h1{font-size:15pt;margin:0 0 2px}
+  #printArea .meta{font-size:9.5pt;color:#444;margin-bottom:10px;border-bottom:1px solid #999;padding-bottom:6px}
+  .pgrp{break-inside:avoid;margin-bottom:9px;padding-bottom:7px;border-bottom:1px dotted #bbb}
+  .pgrp .pn{font-weight:700;font-size:11.5pt}
+  .pgrp .pr{font-size:9.5pt;color:#444}
+  .pgrp .ph{display:flex;justify-content:space-between;gap:8px;font-size:10.5pt;margin-top:3px}
+  .pgrp .pnote{font-size:9.5pt;color:#333}
+  @page{margin:12mm 10mm}
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <button class="iconbtn" id="backBtn" style="display:none">‹</button>
+  <h1 id="ttl">लेन-देन<span class="sub" id="sub">किससे कितना लेना-देना है</span></h1>
+</header>
+
+<main>
+  <!-- ============ होम ============ -->
+  <section class="view on" id="v-home">
+    <div class="position">
+      <div><div class="lbl">मेरा बाहर है</div><div class="val num out" id="posOut">₹0</div></div>
+      <div><div class="lbl">मुझ पर बकाया</div><div class="val num in" id="posIn">₹0</div></div>
+    </div>
+
+    <h2 class="sec">आज और बीती हुई तारीखें</h2>
+    <div class="card" id="dueList"></div>
+
+    <h2 class="sec">आने वाले सात दिन</h2>
+    <div class="card" id="soonList"></div>
+  </section>
+
+  <!-- ============ लोग ============ -->
+  <section class="view" id="v-people">
+    <input class="search" id="pSearch" placeholder="नाम या पहचान से खोजें">
+    <div class="card" id="peopleList"></div>
+  </section>
+
+  <!-- ============ व्यक्ति ============ -->
+  <section class="view" id="v-person">
+    <div class="position">
+      <div><div class="lbl">इनके पास मेरा</div><div class="val num out" id="prOut">₹0</div></div>
+      <div><div class="lbl">इनका मुझ पर</div><div class="val num in" id="prIn">₹0</div></div>
+    </div>
+    <div class="btnrow">
+      <button class="btn" onclick="newHisab()">नया हिसाब</button>
+      <button class="btn ghost" onclick="openSplit()">रकम बाँटें</button>
+    </div>
+
+    <h2 class="sec">चल रहे हिसाब</h2>
+    <div class="card" id="openHisab"></div>
+
+    <h2 class="sec">निपटे हुए</h2>
+    <div class="card" id="doneHisab"></div>
+
+    <div class="btnrow" style="margin-top:20px">
+      <button class="btn grey" onclick="editPerson()">विवरण बदलें</button>
+      <button class="btn grey" onclick="removePerson()">व्यक्ति हटाएँ</button>
+    </div>
+  </section>
+
+  <!-- ============ हिसाब ============ -->
+  <section class="view" id="v-hisab">
+    <div class="card">
+      <div class="stat"><span id="hCat" class="muted"></span><span class="pill" id="hStatus"></span></div>
+      <div class="stat"><span>दिया</span><b class="num out" id="hOut">₹0</b></div>
+      <div class="stat"><span>मिला</span><b class="num in" id="hIn">₹0</b></div>
+      <div class="stat"><span id="hBalLbl">बाकी</span><b class="num" id="hBal">₹0</b></div>
+      <div class="stat"><span>अगली बात</span><b id="hDue">—</b></div>
+    </div>
+
+    <div class="btnrow">
+      <button class="btn" onclick="newEntry()">रकम जोड़ें</button>
+      <button class="btn ghost" onclick="newCall()">बात दर्ज करें</button>
+    </div>
+
+    <h2 class="sec">रकम का ब्योरा</h2>
+    <div class="card" id="entryList"></div>
+
+    <h2 class="sec">बातचीत का ब्योरा</h2>
+    <div class="card" id="callList"></div>
+
+    <div class="btnrow" style="margin-top:20px">
+      <button class="btn grey" onclick="editHisab()">हिसाब बदलें</button>
+      <button class="btn grey" id="toggleDone" onclick="toggleHisabStatus()">निपटा मानें</button>
+    </div>
+    <div class="btnrow">
+      <button class="btn grey" onclick="removeHisab()">हिसाब हटाएँ</button>
+    </div>
+  </section>
+
+  <!-- ============ रिपोर्ट ============ -->
+  <section class="view" id="v-report">
+    <label class="f"><span>किसकी सूची</span>
+      <select id="rWhat">
+        <option value="open">चल रहे सब हिसाब</option>
+        <option value="out">सिर्फ जो मेरा बाहर है</option>
+        <option value="in">सिर्फ जो मुझ पर बकाया है</option>
+        <option value="over">जिनकी तारीख निकल चुकी</option>
+        <option value="all">सब कुछ, निपटे हुए समेत</option>
+      </select>
+    </label>
+    <label class="f"><span>छपाई</span>
+      <select id="rCols"><option value="1">एक कॉलम</option><option value="2">दो कॉलम</option></select>
+    </label>
+    <label class="f" style="display:flex;gap:8px;align-items:center">
+      <input type="checkbox" id="rNotes" style="width:auto" checked>
+      <span style="margin:0">पिछली बातचीत का नोट भी छापें</span>
+    </label>
+
+    <div class="btnrow">
+      <button class="btn" onclick="doPrint()">देखें और छापें</button>
+      <button class="btn ghost" onclick="shareText()">व्हाट्सएप पर भेजें</button>
+    </div>
+    <p class="muted" style="font-size:13px;line-height:1.65;margin-top:14px">
+      छपाई की खिड़की में <b>Save as PDF</b> चुनकर PDF बना सकते हैं। फिर वही फाइल व्हाट्सएप पर भेज दें।
+      ऊपर वाला बटन सूची को सीधे लिखे हुए संदेश के रूप में भेजता है।
+    </p>
+  </section>
+
+  <!-- ============ सेटिंग ============ -->
+  <section class="view" id="v-settings">
+    <h2 class="sec">एक्सेल</h2>
+    <div class="btnrow">
+      <button class="btn" onclick="xlsxExport()">एक्सेल में निकालें</button>
+    </div>
+    <div class="btnrow">
+      <button class="btn ghost" onclick="document.getElementById('xlsxFile').click()">एक्सेल से भरें</button>
+    </div>
+    <input type="file" id="xlsxFile" accept=".xlsx,.xls" style="display:none">
+    <div class="warnbox" style="margin-top:12px">
+      एक्सेल से भरने पर ऐप का सारा मौजूदा data हट जाएगा और उसकी जगह फाइल वाला data आ जाएगा।
+      हटाने से पहले ऐप पुराने data की एक बैकअप फाइल अपने आप निकाल देगी।
+      <br><br>
+      फोन का browser data साफ करने पर भी यह हिसाब मिट जाता है। हफ्ते में एक बार एक्सेल निकालकर रख लें।
+    </div>
+
+    <h2 class="sec">श्रेणियाँ</h2>
+    <div class="card" id="catList"></div>
+    <div class="btnrow"><button class="btn ghost" onclick="newCat()">नई श्रेणी</button></div>
+
+    <h2 class="sec">आँकड़े</h2>
+    <div class="card" id="statsList"></div>
+  </section>
+</main>
+
+<button class="fab" id="fab" onclick="fabAction()">+</button>
+
+<nav class="tabs">
+  <button data-tab="home" class="on"><b>⌂</b>होम</button>
+  <button data-tab="people"><b>☰</b>लोग</button>
+  <button data-tab="report"><b>⎙</b>रिपोर्ट</button>
+  <button data-tab="settings"><b>⚙</b>सेटिंग</button>
+</nav>
+
+<div class="scrim" id="scrim" onclick="closeSheet()"></div>
+<div class="sheet" id="sheet"><div class="grab"></div><div id="sheetBody"></div></div>
+
+<div id="printArea"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.20.3/package/dist/xlsx.full.min.js"></script>
+<script>
+/* ==================== data ==================== */
+const KEY='lenden_v1';
+const DEFAULT_CATS=[
+  {id:'c1',name:'मैंने जमा किया',nature:'out'},
+  {id:'c2',name:'मैंने उधार दिया',nature:'out'},
+  {id:'c3',name:'प्रोजेक्ट का बकाया',nature:'out'},
+  {id:'c4',name:'मैंने उधार लिया',nature:'in'},
+  {id:'c5',name:'मेरे पास जमा किया',nature:'in'}
+];
+let db={people:[],hisabs:[],entries:[],followups:[],cats:DEFAULT_CATS.slice()};
+let cur={person:null,hisab:null,tab:'home',stack:[]};
+
+function load(){
+  try{const r=localStorage.getItem(KEY); if(r)db=Object.assign(db,JSON.parse(r));}catch(e){}
+  if(!db.cats||!db.cats.length)db.cats=DEFAULT_CATS.slice();
+}
+function save(){localStorage.setItem(KEY,JSON.stringify(db));}
+function uid(p){return p+Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function today(){const d=new Date();return d.toISOString().slice(0,10);}
+function addDays(s,n){const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);return d.toISOString().slice(0,10);}
+function hDate(s){if(!s)return '—';const [y,m,d]=s.split('-');return d+'/'+m+'/'+y;}
+function daysAgo(s){if(!s)return null;return Math.round((new Date(today())-new Date(s))/86400000);}
+function money(n){
+  const neg=n<0; n=Math.abs(Math.round(n));
+  let s=String(n),r='';
+  if(s.length>3){r=','+s.slice(-3);s=s.slice(0,-3);
+    while(s.length>2){r=','+s.slice(-2)+r;s=s.slice(0,-2);}}
+  return (neg?'−₹':'₹')+s+r;
+}
+const P=id=>db.people.find(x=>x.id===id);
+const H=id=>db.hisabs.find(x=>x.id===id);
+const CAT=id=>db.cats.find(x=>x.id===id);
+const catName=id=>{const c=CAT(id);return c?c.name:'—';};
+
+function hisabSum(hid){
+  let o=0,i=0;
+  db.entries.filter(e=>e.hisabId===hid).forEach(e=>{e.type==='out'?o+=e.amount:i+=e.amount;});
+  return {out:o,in:i,bal:o-i};
+}
+function personSum(pid){
+  let out=0,inn=0;
+  db.hisabs.filter(h=>h.personId===pid&&h.status==='open').forEach(h=>{
+    const b=hisabSum(h.id).bal;
+    if(b>0)out+=b; else if(b<0)inn+=-b;
+  });
+  return {out,in:inn,net:out-inn};
+}
+function openHisabsSorted(){
+  return db.hisabs.filter(h=>h.status==='open')
+    .sort((a,b)=>(a.dueDate||'9999')<(b.dueDate||'9999')?-1:1);
+}
+
+/* ==================== navigation ==================== */
+function show(view,title,sub,back){
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('on'));
+  document.getElementById('v-'+view).classList.add('on');
+  document.getElementById('ttl').innerHTML=title+'<span class="sub">'+(sub||'')+'</span>';
+  document.getElementById('backBtn').style.display=back?'block':'none';
+  document.getElementById('fab').style.display=(view==='people'||view==='home')?'flex':'none';
+  window.scrollTo(0,0);
+}
+document.querySelectorAll('nav.tabs button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('on'));
+    b.classList.add('on');
+    cur.tab=b.dataset.tab;cur.stack=[];
+    ({home:goHome,people:goPeople,report:goReport,settings:goSettings})[cur.tab]();
+  };
+});
+document.getElementById('backBtn').onclick=()=>{
+  const prev=cur.stack.pop();
+  if(prev==='person'&&cur.person)goPerson(cur.person,true);
+  else ({home:goHome,people:goPeople,report:goReport,settings:goSettings})[cur.tab]();
+};
+function fabAction(){newPerson();}
+
+/* ==================== home ==================== */
+function goHome(){
+  let out=0,inn=0;
+  db.people.forEach(p=>{const s=personSum(p.id);out+=s.out;inn+=s.in;});
+  document.getElementById('posOut').textContent=money(out);
+  document.getElementById('posIn').textContent=money(inn);
+
+  const t=today(), soonEnd=addDays(t,7);
+  const due=[],soon=[];
+  openHisabsSorted().forEach(h=>{
+    if(!h.dueDate)return;
+    if(h.dueDate<=t)due.push(h);
+    else if(h.dueDate<=soonEnd)soon.push(h);
+  });
+  document.getElementById('dueList').innerHTML=due.length?due.map(h=>dueRow(h,true)).join('')
+    :'<div class="empty">आज किसी से बात करनी बाकी नहीं है।</div>';
+  document.getElementById('soonList').innerHTML=soon.length?soon.map(h=>dueRow(h,false)).join('')
+    :'<div class="empty">अगले हफ्ते कोई तारीख तय नहीं है।</div>';
+  show('home','लेन-देन','किससे कितना लेना-देना है',false);
+}
+function dueRow(h,isDue){
+  const p=P(h.personId),b=hisabSum(h.id).bal,t=today();
+  const late=h.dueDate<t?daysAgo(h.dueDate):0;
+  const pill=h.dueDate<t?'<span class="pill over">'+late+' दिन बीते</span>'
+    :h.dueDate===t?'<span class="pill due">आज</span>'
+    :'<span class="pill">'+hDate(h.dueDate)+'</span>';
+  return `<button class="row" onclick="goHisab('${h.id}')">
+    <div class="l1"><span class="nm">${esc(p?p.name:'?')}</span>
+      <span class="amt num ${b>0?'out':b<0?'in':'zero'}">${money(Math.abs(b))}</span></div>
+    <div class="l2"><span>${esc(h.title||catName(h.catId))}</span>${pill}</div></button>`;
+}
+
+/* ==================== people ==================== */
+function goPeople(){
+  renderPeople();
+  show('people','लोग',db.people.length+' व्यक्ति',false);
+}
+document.getElementById('pSearch').oninput=renderPeople;
+function renderPeople(){
+  const q=document.getElementById('pSearch').value.trim().toLowerCase();
+  let list=db.people.slice();
+  if(q)list=list.filter(p=>(p.name+' '+(p.ref||'')).toLowerCase().includes(q));
+  list.sort((a,b)=>Math.abs(personSum(b.id).net)-Math.abs(personSum(a.id).net));
+  document.getElementById('peopleList').innerHTML=list.length?list.map(p=>{
+    const s=personSum(p.id);
+    const n=db.hisabs.filter(h=>h.personId===p.id&&h.status==='open').length;
+    return `<button class="row" onclick="goPerson('${p.id}')">
+      <div class="l1"><span class="nm">${esc(p.name)}</span>
+        <span class="amt num ${s.net>0?'out':s.net<0?'in':'zero'}">${money(Math.abs(s.net))}</span></div>
+      <div class="l2"><span>${esc(p.ref||'')}</span><span>${n?n+' हिसाब चल रहे':'सब निपटा'}</span></div></button>`;
+  }).join(''):'<div class="empty">अभी कोई नाम नहीं जुड़ा।<br>नीचे + दबाकर पहला नाम जोड़ें।</div>';
+}
+
+/* ==================== person ==================== */
+function goPerson(pid,noPush){
+  cur.person=pid;
+  if(!noPush)cur.stack=['people'];
+  const p=P(pid),s=personSum(pid);
+  document.getElementById('prOut').textContent=money(s.out);
+  document.getElementById('prIn').textContent=money(s.in);
+  const hs=db.hisabs.filter(h=>h.personId===pid);
+  const op=hs.filter(h=>h.status==='open').sort((a,b)=>(a.dueDate||'9999')<(b.dueDate||'9999')?-1:1);
+  const dn=hs.filter(h=>h.status!=='open');
+  document.getElementById('openHisab').innerHTML=op.length?op.map(hisabRow).join('')
+    :'<div class="empty">कोई हिसाब चालू नहीं है।</div>';
+  document.getElementById('doneHisab').innerHTML=dn.length?dn.map(hisabRow).join('')
+    :'<div class="empty">अभी कोई हिसाब निपटा नहीं।</div>';
+  show('person',esc(p.name),esc(p.ref||'')+(p.phone?' · '+p.phone:''),true);
+}
+function hisabRow(h){
+  const b=hisabSum(h.id).bal,t=today();
+  let pill='';
+  if(h.status!=='open')pill='<span class="pill done">निपटा</span>';
+  else if(h.dueDate&&h.dueDate<t)pill='<span class="pill over">'+daysAgo(h.dueDate)+' दिन बीते</span>';
+  else if(h.dueDate===t)pill='<span class="pill due">आज बात करनी है</span>';
+  else if(h.dueDate)pill='<span class="pill">'+hDate(h.dueDate)+'</span>';
+  const age=h.startDate?daysAgo(h.startDate):null;
+  return `<button class="row" onclick="goHisab('${h.id}')">
+    <div class="l1"><span class="nm">${esc(h.title||catName(h.catId))}</span>
+      <span class="amt num ${b>0?'out':b<0?'in':'zero'}">${money(Math.abs(b))}</span></div>
+    <div class="l2"><span>${esc(catName(h.catId))}${age!==null?' · '+age+' दिन पुराना':''}</span>${pill}</div></button>`;
+}
+
+/* ==================== hisab ==================== */
+function goHisab(hid,noPush){
+  cur.hisab=hid;const h=H(hid);cur.person=h.personId;
+  if(!noPush)cur.stack=['person'];
+  const s=hisabSum(hid),p=P(h.personId);
+  document.getElementById('hCat').textContent=catName(h.catId);
+  document.getElementById('hStatus').textContent=h.status==='open'?'चालू':'निपटा';
+  document.getElementById('hStatus').className='pill'+(h.status==='open'?'':' done');
+  document.getElementById('hOut').textContent=money(s.out);
+  document.getElementById('hIn').textContent=money(s.in);
+  document.getElementById('hBalLbl').textContent=s.bal>0?'इनके पास मेरा':s.bal<0?'इनका मुझ पर':'बराबर';
+  const bal=document.getElementById('hBal');
+  bal.textContent=money(Math.abs(s.bal));
+  bal.className='num '+(s.bal>0?'out':s.bal<0?'in':'zero');
+  document.getElementById('hDue').textContent=hDate(h.dueDate);
+  document.getElementById('toggleDone').textContent=h.status==='open'?'निपटा मानें':'फिर से चालू करें';
+
+  const es=db.entries.filter(e=>e.hisabId===hid).sort((a,b)=>a.date<b.date?1:-1);
+  document.getElementById('entryList').innerHTML=es.length?es.map(e=>`
+    <div class="entry"><div class="top">
+      <span class="dt">${hDate(e.date)} · ${e.type==='out'?'मैंने दिया':'मुझे मिला'}${e.paymentId?' · बँटी रकम':''}</span>
+      <span class="amt num ${e.type}">${money(e.amount)}</span></div>
+      ${e.note?'<div class="nt">'+esc(e.note)+'</div>':''}
+      <button class="del" onclick="delEntry('${e.id}')">हटाएँ</button></div>`).join('')
+    :'<div class="empty">अभी कोई रकम दर्ज नहीं।</div>';
+
+  const fs=db.followups.filter(f=>f.hisabId===hid).sort((a,b)=>a.callDate<b.callDate?1:-1);
+  document.getElementById('callList').innerHTML=fs.length?fs.map(f=>`
+    <div class="entry"><div class="top">
+      <span class="dt">${hDate(f.callDate)}</span>
+      ${f.nextDate?'<span class="pill">अगली '+hDate(f.nextDate)+'</span>':''}</div>
+      <div class="nt">${esc(f.note||'')}</div>
+      <button class="del" onclick="delCall('${f.id}')">हटाएँ</button></div>`).join('')
+    :'<div class="empty">अभी कोई बात दर्ज नहीं।</div>';
+
+  show('hisab',esc(h.title||catName(h.catId)),esc(p.name),true);
+}
+
+/* ==================== sheet helpers ==================== */
+function openSheet(html){
+  document.getElementById('sheetBody').innerHTML=html;
+  document.getElementById('sheet').classList.add('on');
+  document.getElementById('scrim').classList.add('on');
+}
+function closeSheet(){
+  document.getElementById('sheet').classList.remove('on');
+  document.getElementById('scrim').classList.remove('on');
+}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function val(id){return document.getElementById(id).value.trim();}
+function catOptions(sel){return db.cats.map(c=>`<option value="${c.id}"${c.id===sel?' selected':''}>${esc(c.name)}</option>`).join('');}
+
+/* ==================== person forms ==================== */
+function newPerson(p){
+  p=p||{};
+  openSheet(`<h3>${p.id?'विवरण बदलें':'नया व्यक्ति'}</h3>
+    <label class="f"><span>नाम</span><input type="text" id="fName" value="${esc(p.name||'')}"></label>
+    <label class="f"><span>पहचान — जैसे "मोहन के भाई, बिचपुरी"</span><input type="text" id="fRef" value="${esc(p.ref||'')}"></label>
+    <label class="f"><span>फोन (जरूरी नहीं)</span><input type="tel" id="fPhone" value="${esc(p.phone||'')}"></label>
+    <label class="f"><span>नोट</span><textarea id="fNote">${esc(p.note||'')}</textarea></label>
+    <button class="btn wide" onclick="savePerson('${p.id||''}')">सहेजें</button>`);
+  setTimeout(()=>document.getElementById('fName').focus(),120);
+}
+function savePerson(id){
+  const name=val('fName');
+  if(!name){alert('नाम लिखना जरूरी है।');return;}
+  if(id){Object.assign(P(id),{name,ref:val('fRef'),phone:val('fPhone'),note:val('fNote')});}
+  else{db.people.push({id:uid('p'),name,ref:val('fRef'),phone:val('fPhone'),note:val('fNote')});}
+  save();closeSheet();
+  id?goPerson(id,true):goPeople();
+}
+function editPerson(){newPerson(P(cur.person));}
+function removePerson(){
+  const p=P(cur.person);
+  const n=db.hisabs.filter(h=>h.personId===p.id).length;
+  if(!confirm(p.name+' और इनके '+n+' हिसाब पूरी तरह हट जाएँगे। हटाएँ?'))return;
+  const hids=db.hisabs.filter(h=>h.personId===p.id).map(h=>h.id);
+  db.entries=db.entries.filter(e=>!hids.includes(e.hisabId));
+  db.followups=db.followups.filter(f=>!hids.includes(f.hisabId));
+  db.hisabs=db.hisabs.filter(h=>h.personId!==p.id);
+  db.people=db.people.filter(x=>x.id!==p.id);
+  save();goPeople();
+}
+
+/* ==================== hisab forms ==================== */
+function newHisab(h){
+  h=h||{};const isNew=!h.id;
+  openSheet(`<h3>${isNew?'नया हिसाब':'हिसाब बदलें'}</h3>
+    <label class="f"><span>श्रेणी</span><select id="fCat">${catOptions(h.catId)}</select></label>
+    <label class="f"><span>शीर्षक — जैसे "छत का काम, मार्च"</span><input type="text" id="fTitle" value="${esc(h.title||'')}"></label>
+    <label class="f"><span>अगली बात की तारीख</span><input type="date" id="fDue" value="${h.dueDate||''}"></label>
+    ${isNew?`<div class="two">
+      <label class="f"><span>पहली रकम</span><input type="number" id="fAmt" inputmode="numeric"></label>
+      <label class="f"><span>तारीख</span><input type="date" id="fDate" value="${today()}"></label></div>
+      <label class="f"><span>यह रकम</span><select id="fType">
+        <option value="out">मैंने दी</option><option value="in">मुझे मिली</option></select></label>`:''}
+    <button class="btn wide" onclick="saveHisab('${h.id||''}')">सहेजें</button>`);
+  if(isNew){
+    const sel=document.getElementById('fCat');
+    sel.onchange=()=>{const c=CAT(sel.value);if(c)document.getElementById('fType').value=c.nature;};
+    sel.onchange();
+  }
+}
+function saveHisab(id){
+  const catId=val('fCat');
+  if(id){
+    Object.assign(H(id),{catId,title:val('fTitle'),dueDate:val('fDue')});
+    save();closeSheet();goHisab(id,true);return;
+  }
+  const hid=uid('h');
+  db.hisabs.push({id:hid,personId:cur.person,catId,title:val('fTitle'),
+    dueDate:val('fDue'),status:'open',startDate:val('fDate')||today()});
+  const amt=parseFloat(val('fAmt'));
+  if(amt>0){db.entries.push({id:uid('e'),hisabId:hid,date:val('fDate')||today(),
+    amount:amt,type:val('fType'),note:'',paymentId:''});}
+  save();closeSheet();goHisab(hid);
+}
+function editHisab(){newHisab(H(cur.hisab));}
+function toggleHisabStatus(){
+  const h=H(cur.hisab);
+  h.status=h.status==='open'?'done':'open';
+  if(h.status==='done')h.dueDate='';
+  save();goHisab(h.id,true);
+}
+function removeHisab(){
+  const h=H(cur.hisab);
+  if(!confirm('यह हिसाब और इसकी सारी entries हट जाएँगी। हटाएँ?'))return;
+  db.entries=db.entries.filter(e=>e.hisabId!==h.id);
+  db.followups=db.followups.filter(f=>f.hisabId!==h.id);
+  db.hisabs=db.hisabs.filter(x=>x.id!==h.id);
+  save();goPerson(h.personId);
+}
+
+/* ==================== entry ==================== */
+function newEntry(){
+  const h=H(cur.hisab),c=CAT(h.catId);
+  openSheet(`<h3>रकम जोड़ें</h3>
+    <div class="two">
+      <label class="f"><span>रकम</span><input type="number" id="fAmt" inputmode="numeric"></label>
+      <label class="f"><span>तारीख</span><input type="date" id="fDate" value="${today()}"></label>
+    </div>
+    <label class="f"><span>क्या हुआ</span><select id="fType">
+      <option value="out"${c&&c.nature==='out'?' selected':''}>मैंने दी</option>
+      <option value="in"${c&&c.nature==='in'?' selected':''}>मुझे मिली</option></select></label>
+    <label class="f"><span>नोट</span><textarea id="fNote"></textarea></label>
+    <button class="btn wide" onclick="saveEntry()">सहेजें</button>`);
+  setTimeout(()=>document.getElementById('fAmt').focus(),120);
+}
+function saveEntry(){
+  const amt=parseFloat(val('fAmt'));
+  if(!(amt>0)){alert('रकम सही लिखें।');return;}
+  db.entries.push({id:uid('e'),hisabId:cur.hisab,date:val('fDate')||today(),
+    amount:amt,type:val('fType'),note:val('fNote'),paymentId:''});
+  save();closeSheet();goHisab(cur.hisab,true);
+}
+function delEntry(id){
+  if(!confirm('यह रकम हटाएँ?'))return;
+  db.entries=db.entries.filter(e=>e.id!==id);save();goHisab(cur.hisab,true);
+}
+
+/* ==================== follow-up ==================== */
+function newCall(){
+  openSheet(`<h3>बात दर्ज करें</h3>
+    <label class="f"><span>बात कब हुई</span><input type="date" id="fDate" value="${today()}"></label>
+    <label class="f"><span>क्या कहा</span><textarea id="fNote" placeholder="जैसे: दिवाली तक देने को कहा है"></textarea></label>
+    <label class="f"><span>अब अगली बात कब</span><input type="date" id="fNext"></label>
+    <button class="btn wide" onclick="saveCall()">सहेजें</button>`);
+  setTimeout(()=>document.getElementById('fNote').focus(),120);
+}
+function saveCall(){
+  const note=val('fNote');
+  if(!note){alert('बात का नोट लिखें।');return;}
+  const next=val('fNext');
+  db.followups.push({id:uid('f'),hisabId:cur.hisab,callDate:val('fDate')||today(),note,nextDate:next});
+  H(cur.hisab).dueDate=next;
+  save();closeSheet();goHisab(cur.hisab,true);
+}
+function delCall(id){
+  if(!confirm('यह बात हटाएँ?'))return;
+  db.followups=db.followups.filter(f=>f.id!==id);save();goHisab(cur.hisab,true);
+}
+
+/* ==================== split ==================== */
+function openSplit(){
+  const hs=db.hisabs.filter(h=>h.personId===cur.person&&h.status==='open');
+  if(hs.length<2){alert('बाँटने के लिए कम से कम दो चालू हिसाब चाहिए।');return;}
+  openSheet(`<h3>एक रकम कई हिसाबों में बाँटें</h3>
+    <div class="two">
+      <label class="f"><span>कुल रकम</span><input type="number" id="sTotal" inputmode="numeric" oninput="splitLeft()"></label>
+      <label class="f"><span>तारीख</span><input type="date" id="sDate" value="${today()}"></label>
+    </div>
+    <label class="f"><span>यह रकम</span><select id="sType">
+      <option value="in">मुझे मिली</option><option value="out">मैंने दी</option></select></label>
+    <p class="muted" style="font-size:13px;margin:0 0 10px">हर हिसाब में कितना जाएगा:</p>
+    ${hs.map(h=>{const b=hisabSum(h.id).bal;
+      return `<label class="f"><span>${esc(h.title||catName(h.catId))} — बाकी ${money(Math.abs(b))}</span>
+      <input type="number" inputmode="numeric" class="sp" data-h="${h.id}" oninput="splitLeft()"></label>`;}).join('')}
+    <p id="sLeft" class="muted" style="font-size:14px"></p>
+    <label class="f"><span>नोट</span><textarea id="sNote"></textarea></label>
+    <button class="btn wide" onclick="saveSplit()">सहेजें</button>`);
+}
+function splitLeft(){
+  const tot=parseFloat(val('sTotal'))||0;
+  let s=0;document.querySelectorAll('.sp').forEach(i=>s+=parseFloat(i.value)||0);
+  const el=document.getElementById('sLeft');
+  const left=tot-s;
+  el.textContent=left===0&&tot>0?'पूरी रकम बँट गई।':'बाँटना बाकी: '+money(left);
+  el.style.color=left===0&&tot>0?'var(--out)':left<0?'var(--in)':'var(--ink2)';
+}
+function saveSplit(){
+  const tot=parseFloat(val('sTotal'))||0;
+  const parts=[];let s=0;
+  document.querySelectorAll('.sp').forEach(i=>{
+    const v=parseFloat(i.value)||0;
+    if(v>0){parts.push({hid:i.dataset.h,amt:v});s+=v;}
+  });
+  if(!parts.length){alert('कम से कम एक हिसाब में रकम डालें।');return;}
+  if(Math.abs(s-tot)>0.01){alert('हिस्सों का जोड़ कुल रकम से मेल नहीं खा रहा।');return;}
+  const pay=uid('pay'),date=val('sDate')||today(),type=val('sType'),note=val('sNote');
+  parts.forEach(p=>db.entries.push({id:uid('e'),hisabId:p.hid,date,amount:p.amt,type,note,paymentId:pay}));
+  save();closeSheet();goPerson(cur.person,true);
+}
+
+/* ==================== report / print ==================== */
+function reportRows(){
+  const what=val('rWhat'),t=today();
+  let hs=db.hisabs.filter(h=>what==='all'?true:h.status==='open');
+  hs=hs.filter(h=>{
+    const b=hisabSum(h.id).bal;
+    if(what==='out')return b>0;
+    if(what==='in')return b<0;
+    if(what==='over')return h.dueDate&&h.dueDate<t;
+    return true;
+  });
+  hs.sort((a,b)=>{
+    const pa=P(a.personId).name,pb=P(b.personId).name;
+    return pa===pb?((a.dueDate||'9999')<(b.dueDate||'9999')?-1:1):(pa<pb?-1:1);
+  });
+  return hs;
+}
+function doPrint(){
+  const hs=reportRows(),cols=val('rCols'),withNotes=document.getElementById('rNotes').checked;
+  if(!hs.length){alert('इस शर्त पर कोई हिसाब नहीं मिला।');return;}
+  let tOut=0,tIn=0;
+  const body=hs.map(h=>{
+    const p=P(h.personId),b=hisabSum(h.id).bal;
+    if(b>0)tOut+=b;else tIn+=-b;
+    const last=db.followups.filter(f=>f.hisabId===h.id).sort((a,b)=>a.callDate<b.callDate?1:-1)[0];
+    return `<div class="pgrp">
+      <div class="pn">${esc(p.name)}</div>
+      ${p.ref?'<div class="pr">'+esc(p.ref)+(p.phone?' · '+esc(p.phone):'')+'</div>':''}
+      <div class="ph"><span>${esc(h.title||catName(h.catId))}</span>
+        <span>${b>0?'लेना':b<0?'देना':'बराबर'} ${money(Math.abs(b))}</span></div>
+      <div class="pr">${esc(catName(h.catId))}${h.dueDate?' · अगली बात '+hDate(h.dueDate):''}</div>
+      ${withNotes&&last?'<div class="pnote">'+hDate(last.callDate)+' — '+esc(last.note)+'</div>':''}
+    </div>`;
+  }).join('');
+  const label=document.getElementById('rWhat').selectedOptions[0].text;
+  const pa=document.getElementById('printArea');
+  pa.className=cols==='2'?'c2':'';
+  pa.innerHTML=`<h1>लेन-देन का हिसाब</h1>
+    <div class="meta">${esc(label)} · ${hs.length} हिसाब · कुल लेना ${money(tOut)} · कुल देना ${money(tIn)} · ${hDate(today())}</div>
+    <div class="plist">${body}</div>`;
+  setTimeout(()=>window.print(),80);
+}
+function shareText(){
+  const hs=reportRows();
+  if(!hs.length){alert('इस शर्त पर कोई हिसाब नहीं मिला।');return;}
+  let tOut=0,tIn=0;
+  const lines=hs.map(h=>{
+    const p=P(h.personId),b=hisabSum(h.id).bal;
+    if(b>0)tOut+=b;else tIn+=-b;
+    return '• '+p.name+(p.ref?' ('+p.ref+')':'')+' — '+(h.title||catName(h.catId))+' — '
+      +(b>0?'लेना ':b<0?'देना ':'')+money(Math.abs(b))+(h.dueDate?' — '+hDate(h.dueDate):'');
+  });
+  const text='लेन-देन का हिसाब — '+hDate(today())+'\n\n'+lines.join('\n')
+    +'\n\nकुल लेना '+money(tOut)+' · कुल देना '+money(tIn);
+  if(navigator.share)navigator.share({text}).catch(()=>{});
+  else{navigator.clipboard.writeText(text);alert('सूची copy हो गई। व्हाट्सएप में paste कर दें।');}
+}
+function goReport(){show('report','रिपोर्ट','छापने और भेजने के लिए',false);}
+
+/* ==================== settings ==================== */
+function goSettings(){
+  document.getElementById('catList').innerHTML=db.cats.map(c=>`
+    <div class="stat"><span>${esc(c.name)}<br><span class="muted" style="font-size:12.5px">${c.nature==='out'?'इसमें आमतौर पर मैं देता हूँ':'इसमें आमतौर पर मुझे मिलता है'}</span></span>
+      <button class="del" onclick="delCat('${c.id}')">हटाएँ</button></div>`).join('');
+  const used=db.entries.length;
+  document.getElementById('statsList').innerHTML=`
+    <div class="stat"><span>व्यक्ति</span><b>${db.people.length}</b></div>
+    <div class="stat"><span>चल रहे हिसाब</span><b>${db.hisabs.filter(h=>h.status==='open').length}</b></div>
+    <div class="stat"><span>निपटे हिसाब</span><b>${db.hisabs.filter(h=>h.status!=='open').length}</b></div>
+    <div class="stat"><span>रकम की entries</span><b>${used}</b></div>
+    <div class="stat"><span>दर्ज बातचीत</span><b>${db.followups.length}</b></div>`;
+  show('settings','सेटिंग','श्रेणियाँ और एक्सेल',false);
+}
+function newCat(){
+  openSheet(`<h3>नई श्रेणी</h3>
+    <label class="f"><span>नाम</span><input type="text" id="cName"></label>
+    <label class="f"><span>इसमें आमतौर पर</span><select id="cNat">
+      <option value="out">मैं पैसा देता हूँ</option><option value="in">मुझे पैसा मिलता है</option></select></label>
+    <button class="btn wide" onclick="saveCat()">सहेजें</button>`);
+}
+function saveCat(){
+  const n=val('cName');if(!n){alert('नाम लिखें।');return;}
+  db.cats.push({id:uid('c'),name:n,nature:val('cNat')});save();closeSheet();goSettings();
+}
+function delCat(id){
+  if(db.hisabs.some(h=>h.catId===id)){alert('यह श्रेणी किसी हिसाब में लगी है, इसलिए हट नहीं सकती।');return;}
+  db.cats=db.cats.filter(c=>c.id!==id);save();goSettings();
+}
+
+/* ==================== excel ==================== */
+function buildWB(){
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(db.people.map(p=>({
+    person_id:p.id,नाम:p.name,पहचान:p.ref||'',फोन:p.phone||'',नोट:p.note||''}))),'व्यक्ति');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(db.hisabs.map(h=>({
+    hisab_id:h.id,person_id:h.personId,cat_id:h.catId,श्रेणी:catName(h.catId),शीर्षक:h.title||'',
+    शुरू:h.startDate||'',अगली_तारीख:h.dueDate||'',स्थिति:h.status==='open'?'चालू':'निपटा',
+    बाकी:hisabSum(h.id).bal}))),'हिसाब');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(db.entries.map(e=>({
+    entry_id:e.id,hisab_id:e.hisabId,तारीख:e.date,प्रकार:e.type==='out'?'दिया':'मिला',
+    रकम:e.amount,नोट:e.note||'',payment_id:e.paymentId||''}))),'रकम');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(db.followups.map(f=>({
+    followup_id:f.id,hisab_id:f.hisabId,बात_की_तारीख:f.callDate,बात:f.note||'',
+    अगली_तारीख:f.nextDate||''}))),'बातचीत');
+  XLSX.utils.book_append_sheet(wb,XLSX.utils.json_to_sheet(db.cats.map(c=>({
+    cat_id:c.id,नाम:c.name,स्वभाव:c.nature}))),'श्रेणी');
+  return wb;
+}
+function xlsxExport(name){
+  if(typeof XLSX==='undefined'){alert('एक्सेल वाला हिस्सा अभी लोड नहीं हुआ। एक बार net से खोलें।');return;}
+  XLSX.writeFile(buildWB(),name||('len-den-'+today()+'.xlsx'));
+}
+document.getElementById('xlsxFile').onchange=function(ev){
+  const f=ev.target.files[0];if(!f)return;
+  if(!confirm('ऐप का सारा मौजूदा data हटकर इस फाइल वाला data आ जाएगा। जारी रखें?')){ev.target.value='';return;}
+  const rd=new FileReader();
+  rd.onload=e=>{
+    try{
+      const wb=XLSX.read(new Uint8Array(e.target.result),{type:'array'});
+      const g=n=>wb.Sheets[n]?XLSX.utils.sheet_to_json(wb.Sheets[n]):[];
+      const people=g('व्यक्ति'),hisabs=g('हिसाब'),entries=g('रकम'),fups=g('बातचीत'),cats=g('श्रेणी');
+      if(!people.length&&!hisabs.length){alert('फाइल में "व्यक्ति" या "हिसाब" वाली sheet नहीं मिली।');return;}
+      xlsxExport('बैकअप-'+today()+'.xlsx');
+      const nd={people:[],hisabs:[],entries:[],followups:[],cats:[]};
+      nd.cats=cats.length?cats.map(r=>({id:String(r.cat_id||uid('c')),name:String(r['नाम']||''),
+        nature:r['स्वभाव']==='in'?'in':'out'})):DEFAULT_CATS.slice();
+      nd.people=people.map(r=>({id:String(r.person_id||uid('p')),name:String(r['नाम']||''),
+        ref:String(r['पहचान']||''),phone:String(r['फोन']||''),note:String(r['नोट']||'')}));
+      nd.hisabs=hisabs.map(r=>({id:String(r.hisab_id||uid('h')),personId:String(r.person_id||''),
+        catId:String(r.cat_id||(nd.cats[0]&&nd.cats[0].id)),title:String(r['शीर्षक']||''),
+        startDate:xdate(r['शुरू']),dueDate:xdate(r['अगली_तारीख']),
+        status:String(r['स्थिति']||'').indexOf('निपट')>=0?'done':'open'}));
+      nd.entries=entries.map(r=>({id:String(r.entry_id||uid('e')),hisabId:String(r.hisab_id||''),
+        date:xdate(r['तारीख']),amount:Number(r['रकम'])||0,
+        type:String(r['प्रकार']||'').indexOf('दिया')>=0?'out':'in',
+        note:String(r['नोट']||''),paymentId:String(r.payment_id||'')}));
+      nd.followups=fups.map(r=>({id:String(r.followup_id||uid('f')),hisabId:String(r.hisab_id||''),
+        callDate:xdate(r['बात_की_तारीख']),note:String(r['बात']||''),nextDate:xdate(r['अगली_तारीख'])}));
+      const pids=nd.people.map(p=>p.id);
+      nd.hisabs=nd.hisabs.filter(h=>pids.includes(h.personId));
+      const hids=nd.hisabs.map(h=>h.id);
+      nd.entries=nd.entries.filter(x=>hids.includes(x.hisabId));
+      nd.followups=nd.followups.filter(x=>hids.includes(x.hisabId));
+      db=nd;save();
+      alert('हो गया — '+nd.people.length+' व्यक्ति, '+nd.hisabs.length+' हिसाब, '+nd.entries.length+' रकम।');
+      goHome();
+    }catch(err){alert('फाइल पढ़ी नहीं जा सकी: '+err.message);}
+    ev.target.value='';
+  };
+  rd.readAsArrayBuffer(f);
+};
+function xdate(v){
+  if(!v)return '';
+  if(typeof v==='number'){const d=XLSX.SSF.parse_date_code(v);
+    return d?[d.y,String(d.m).padStart(2,'0'),String(d.d).padStart(2,'0')].join('-'):'';}
+  const s=String(v).trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s))return s.slice(0,10);
+  const m=s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})$/);
+  if(m)return m[3]+'-'+m[2].padStart(2,'0')+'-'+m[1].padStart(2,'0');
+  return '';
+}
+
+/* ==================== start ==================== */
+load();goHome();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+</script>
+</body>
+</html>
