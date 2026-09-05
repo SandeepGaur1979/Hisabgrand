@@ -326,11 +326,14 @@ function addDays(s,n){const d=new Date(s+'T00:00:00');d.setDate(d.getDate()+n);r
 function hDate(s){if(!s)return '—';const [y,m,d]=s.split('-');return d+'/'+m+'/'+y;}
 function daysAgo(s){if(!s)return null;return Math.round((new Date(today())-new Date(s))/86400000);}
 function money(n){
-  const neg=n<0; n=Math.abs(Math.round(n));
-  let s=String(n),r='';
+  const neg=n<0;
+  const v=Math.round(Math.abs(n)*100)/100;
+  const ip=Math.floor(v), fp=Math.round((v-ip)*100);
+  let s=String(ip),r='';
   if(s.length>3){r=','+s.slice(-3);s=s.slice(0,-3);
     while(s.length>2){r=','+s.slice(-2)+r;s=s.slice(0,-2);}}
-  return (neg?'−₹':'₹')+s+r;
+  const p=fp?'.'+String(fp).padStart(2,'0'):'';
+  return (neg?'−₹':'₹')+s+r+p;
 }
 const P=id=>db.people.find(x=>x.id===id);
 const H=id=>db.hisabs.find(x=>x.id===id);
@@ -554,7 +557,7 @@ function newHisab(h){
     <label class="f"><span>शीर्षक — जैसे "छत का काम, मार्च"</span><input type="text" id="fTitle" value="${esc(h.title||'')}"></label>
     <label class="f"><span>अगली बात की तारीख</span><input type="date" id="fDue" value="${h.dueDate||''}"></label>
     ${isNew?`<div class="two">
-      <label class="f"><span>पहली रकम</span><input type="number" id="fAmt" inputmode="numeric"></label>
+      <label class="f"><span>पहली रकम</span><input type="number" id="fAmt" inputmode="decimal" step="any"></label>
       <label class="f"><span>तारीख</span><input type="date" id="fDate" value="${today()}"></label></div>
       <label class="f"><span>यह रकम</span><select id="fType">
         <option value="out">मैंने दी</option><option value="in">मुझे मिली</option></select></label>`:''}
@@ -600,7 +603,7 @@ function newEntry(){
   const h=H(cur.hisab),c=CAT(h.catId);
   openSheet(`<h3>रकम जोड़ें</h3>
     <div class="two">
-      <label class="f"><span>रकम</span><input type="number" id="fAmt" inputmode="numeric"></label>
+      <label class="f"><span>रकम</span><input type="number" id="fAmt" inputmode="decimal" step="any"></label>
       <label class="f"><span>तारीख</span><input type="date" id="fDate" value="${today()}"></label>
     </div>
     <label class="f"><span>क्या हुआ</span><select id="fType">
@@ -650,7 +653,7 @@ function openSplit(){
   if(hs.length<2){alert('बाँटने के लिए कम से कम दो चालू हिसाब चाहिए।');return;}
   openSheet(`<h3>एक रकम कई हिसाबों में बाँटें</h3>
     <div class="two">
-      <label class="f"><span>कुल रकम</span><input type="number" id="sTotal" inputmode="numeric" oninput="splitLeft()"></label>
+      <label class="f"><span>कुल रकम</span><input type="number" id="sTotal" inputmode="decimal" step="any" oninput="splitLeft()"></label>
       <label class="f"><span>तारीख</span><input type="date" id="sDate" value="${today()}"></label>
     </div>
     <label class="f"><span>यह रकम</span><select id="sType">
@@ -658,7 +661,7 @@ function openSplit(){
     <p class="muted" style="font-size:13px;margin:0 0 10px">हर हिसाब में कितना जाएगा:</p>
     ${hs.map(h=>{const b=hisabSum(h.id).bal;
       return `<label class="f"><span>${esc(h.title||catName(h.catId))} — बाकी ${money(Math.abs(b))}</span>
-      <input type="number" inputmode="numeric" class="sp" data-h="${h.id}" oninput="splitLeft()"></label>`;}).join('')}
+      <input type="number" inputmode="decimal" step="any" class="sp" data-h="${h.id}" oninput="splitLeft()"></label>`;}).join('')}
     <p id="sLeft" class="muted" style="font-size:14px"></p>
     <label class="f"><span>नोट</span><textarea id="sNote"></textarea></label>
     <button class="btn wide" onclick="saveSplit()">सहेजें</button>`);
